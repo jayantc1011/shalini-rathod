@@ -1,155 +1,111 @@
 #!/usr/bin/env python3
-"""Correct Speakathon lesson-video framing according to the source MP4 metadata.
-Run after build_self_hosted_lms.py without changing shared site components.
+"""Restore a portrait-only Speakathon player (9:16) and remove the extra side artwork.
+Runs after the unchanged main website builder. Only the lesson player is altered.
 """
 from pathlib import Path
 import sys
 
 root=Path(sys.argv[1]).resolve()
-html_path=root/'lms-learn.html'
-css_path=root/'style.css'
-player_path=root/'lms-player.js'
-for path in (html_path,css_path,player_path):
-    assert path.is_file(),f"Missing {path}"
-html=html_path.read_text(encoding='utf8')
-assert 'class="sr-video-shell" id="sr-video-shell"' in html, 'Expected original player class not found'
-html=html.replace('class="sr-video-shell" id="sr-video-shell"','class="sr-video-shell sr-video-portrait" id="sr-video-shell"')
-html_path.write_text(html,encoding='utf8')
+html_path=root/"lms-learn.html"
+css_path=root/"style.css"
+js_path=root/"lms-player.js"
+assert all(x.is_file() for x in (html_path,css_path,js_path))
 
-css=r"""
-/* =============================================================
-   Source-aware video frame: Day 1 is 478 x 850 (portrait 9:16).
-   Do NOT display a vertical MP4 by filling a 16:9 crop.
-   The full video and its original aspect ratio are always visible.
-   Works for portrait, landscape and mixed daily recordings.
-   ============================================================= */
-.sr-academy-player-page .sr-video-shell{
-  width:100%;
-  height:min(70vh,640px);
-  min-height:350px;
-  max-height:none;
-  aspect-ratio:auto;
-  display:flex;
-  flex-direction:row;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  overflow:hidden;
-  background:radial-gradient(ellipse at 50% 45%,#253c2f 0%,#131f19 68%,#111a15 100%);
+html=html_path.read_text(encoding="utf-8")
+original='class="sr-video-shell" id="sr-video-shell"'
+assert original in html, "Expected unchanged 21-day LMS player container"
+html=html.replace(original,'class="sr-video-shell sr-video-portrait" id="sr-video-shell"',1)
+html_path.write_text(html,encoding="utf-8")
+
+css=css_path.read_text(encoding="utf-8")
+# Remove original landscape constraint at its source, rather than appending duplicate 16:9 definitions.
+old='.sr-video-shell{position:relative;background:#121c18;width:100%;aspect-ratio:16/9;overflow:hidden;display:grid;place-items:center}'
+new='.sr-video-shell{position:relative;background:#000;width:100%;aspect-ratio:9/16;overflow:hidden;display:block}'
+assert old in css,"Original wide video shell not found"
+css=css.replace(old,new,1)
+css += r"""
+
+/* Speakathon portrait media · use exactly 9:16. No decorative side panels.
+   Center the complete video without cropping, stretching, blurred padding or side copy. */
+.sr-academy-player-page .sr-watch-card {
+  width: min(100%, 380px);
+  max-width: 380px;
+  margin: 0 auto;
 }
-.sr-academy-player-page .sr-video-shell.sr-video-portrait video{
-  display:block;
-  position:relative;
-  flex:none;
-  width:auto;
-  height:100%;
-  max-width:100%;
-  max-height:100%;
-  min-width:0;
-  min-height:0;
-  margin:0 auto;
-  object-fit:contain;
-  object-position:center center;
-  aspect-ratio:auto;
-  background:#111b16;
+.sr-academy-player-page .sr-video-shell,
+.sr-academy-player-page .sr-video-shell.sr-video-portrait {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  max-height: none;
+  aspect-ratio: 9/16;
+  display: block;
+  overflow: hidden;
+  position: relative;
+  background: #000;
+  margin: 0;
 }
-.sr-academy-player-page .sr-video-shell.sr-video-landscape{
-  width:100%;
-  aspect-ratio:16/9;
-  height:auto;
-  min-height:0;
-  max-height:720px;
+.sr-academy-player-page .sr-video-shell video {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  display: block;
+  object-fit: contain;
+  object-position: center center;
+  background: #000;
+  aspect-ratio: 9/16;
 }
-.sr-academy-player-page .sr-video-shell.sr-video-landscape video{
-  display:block;
-  position:relative;
-  width:100%;
-  height:100%;
-  min-height:0;
-  min-width:0;
-  max-width:100%;
-  max-height:100%;
-  object-fit:contain;
-  object-position:center center;
-  aspect-ratio:auto;
-  background:#111b16;
-}
-.sr-academy-player-page .sr-video-shell.sr-video-portrait::before,
-.sr-academy-player-page .sr-video-shell.sr-video-portrait::after{
-  position:absolute;
-  top:50%;
-  transform:translateY(-50%);
-  color:rgba(221,239,207,.35);
-  font:700 12px/1.6 "Bricolage Grotesque",sans-serif;
-  letter-spacing:.22em;
-  text-align:center;
-  width:min(22%,210px);
-  pointer-events:none;
-}
-.sr-academy-player-page .sr-video-shell.sr-video-portrait::before{
-  content:"WATCH\A PRACTISE\A GROW";
-  white-space:pre;
-  left:3%;
-}
-.sr-academy-player-page .sr-video-shell.sr-video-portrait::after{
-  content:"21 DAYS\A ONE VOICE";
-  white-space:pre;
-  right:3%;
+.sr-academy-player-page .sr-video-shell::before,
+.sr-academy-player-page .sr-video-shell::after {
+  display: none;
+  content: none;
 }
 .sr-academy-player-page .sr-video-shell video:fullscreen,
-.sr-academy-player-page .sr-video-shell video:-webkit-full-screen{
-  width:100%;
-  height:100%;
-  max-width:100vw;
-  max-height:100vh;
-  object-fit:contain;
-  background:#000;
+.sr-academy-player-page .sr-video-shell video:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+  max-width: 100vw;
+  max-height: 100vh;
+  object-fit: contain;
+  aspect-ratio: auto;
+  background: #000;
 }
-@media (max-width:750px){
- .sr-academy-player-page .sr-video-shell.sr-video-portrait{
-    height:min(75vh,650px);
-    min-height:0;
- }
- .sr-academy-player-page .sr-video-shell.sr-video-portrait::before,
- .sr-academy-player-page .sr-video-shell.sr-video-portrait::after{
-    display:none;
- }
+.sr-academy-player-page .sr-player-actions {
+  gap: 8px;
+  padding: 10px;
 }
-@media (max-width:480px){
- .sr-academy-player-page .sr-video-shell.sr-video-portrait{
-   height:auto;
-   min-height:0;
-   aspect-ratio:9/16;
- }
- .sr-academy-player-page .sr-video-shell.sr-video-portrait video{
-   width:100%;
-   height:100%;
- }
+.sr-academy-player-page .sr-view-tabs {
+  flex: 1 1 100%;
+  width: 100%;
+}
+.sr-academy-player-page .sr-view-tabs button {
+  flex: 1;
+  padding: 10px 5px;
+}
+.sr-academy-player-page .sr-speed-control {margin-left: auto;}
+@media(max-width:650px){
+  .sr-academy-player-page .sr-watch-card{
+    width: min(100%, 380px);
+    max-width: 100%;
+  }
 }
 """
-with css_path.open('a',encoding='utf8') as f:
-    f.write('\n'+css+'\n')
-js=player_path.read_text(encoding='utf8')
-needle="const video=$('sr-lesson-video'),shell=$('sr-video-shell'),warning=$('sr-media-warning');"
-assert needle in js, "Player structure changed; cannot safely patch."
-addition=needle+"""
-  const updateVideoOrientation=()=>{
-    if(!video.videoWidth||!video.videoHeight)return;
-    const isPortrait=video.videoHeight>video.videoWidth;
-    shell.classList.toggle('sr-video-portrait',isPortrait);
-    shell.classList.toggle('sr-video-landscape',!isPortrait);
-    shell.dataset.videoSize=video.videoWidth+'x'+video.videoHeight;
-    shell.dataset.videoOrientation=isPortrait?'portrait':'landscape';
-  };
-  video.addEventListener('loadedmetadata',updateVideoOrientation);
-"""
-js=js.replace(needle,addition)
-needle2="video.src=path;video.playbackRate=Number($('sr-playback-rate').value)||1;"
-assert needle2 in js
-js=js.replace(needle2,
-"""shell.classList.add('sr-video-portrait');shell.classList.remove('sr-video-landscape');
-    video.src=path;video.playbackRate=Number($('sr-playback-rate').value)||1;""")
-player_path.write_text(js,encoding='utf8')
-assert 'video.videoHeight>video.videoWidth' in js
-assert 'sr-video-portrait' in css
-print('Fixed player: Day 1 displays as centered 9:16 portrait, other lessons adapt to MP4 metadata.')
+css_path.write_text(css,encoding="utf-8")
+js=js_path.read_text(encoding="utf-8")
+assert "const video=$('sr-lesson-video'),shell=$('sr-video-shell'),warning=$('sr-media-warning');" in js
+# Portrait is intentional for every Speakathon lesson; never switch to 16:9.
+assert "video.src=path;video.playbackRate=Number($('sr-playback-rate').value)||1;" in js
+js=js.replace(
+  "video.src=path;video.playbackRate=Number($('sr-playback-rate').value)||1;",
+  "shell.classList.add('sr-video-portrait');\n    video.src=path;video.playbackRate=Number($('sr-playback-rate').value)||1;",
+  1
+)
+js_path.write_text(js,encoding="utf-8")
+assert 'aspect-ratio:9/16' in css
+assert 'WATCH\\A' not in css
+assert 'sr-video-landscape' not in css
+assert 'video.videoHeight>video.videoWidth' not in js
+print("Portrait-only 9:16 player ready. No banners, no side backgrounds, no landscape switching.")
