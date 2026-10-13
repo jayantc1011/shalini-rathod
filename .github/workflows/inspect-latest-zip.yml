@@ -1,28 +1,26 @@
-name: Verify Public Media Fetch
+name: Inspect Speakathon Video Geometry
 on:
   push:
     branches:
       - speakathon-self-hosted-course-20261013
 jobs:
-  verify-media:
+  inspect:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download one worksheet and video
+      - name: Inspect original recording and CSS
         run: |
-          python -m pip install -q gdown
+          curl -fLsS --retry 2 -o day1.mp4 "https://at.adobe.com/A1WQFRVTHDCZCRLI"
+          echo "VIDEO METADATA"
+          ffprobe -v error -select_streams v:0 -show_entries stream=width,height,sample_aspect_ratio,display_aspect_ratio,rotation,codec_name -of json day1.mp4
+          echo "EXTRACT VIDEO ROTATION DATA"
+          ffprobe -v error -select_streams v:0 -show_entries stream_side_data -of json day1.mp4
+          curl -fLsS --retry 2 -o latest.zip "https://at.adobe.com/RudnTowCZMZuUBr7"
+          unzip -oq latest.zip -d src
           python - <<'PY'
-          import gdown
           from pathlib import Path
-          for label,fid,ext in [
-            ("worksheet","1oE57fWTVJvsqGAvXEJ1obDNweq7V4T_P","pdf"),
-            ("video","1xBfZYGdYWfoytZ1e7UqKtHXpKzj7c7az","mp4")
-          ]:
-            try:
-              dest=Path(f"sample-{label}.{ext}")
-              r=gdown.download(id=fid,output=str(dest),quiet=True)
-              ok=dest.exists() and dest.stat().st_size>100000
-              print(label,"download",ok,"bytes",dest.stat().st_size if dest.exists() else 0,"result",r)
-              if ok: print(label,"header",dest.read_bytes()[:14])
-            except Exception as e: print(label,"ERROR",str(e)[:400])
+          s=Path('src/shalini-rathod-website/style.css').read_text()
+          import re
+          for m in re.finditer(r'(?s)([^{}]*video[^{}]*|[^{}]*lms-learn-video-frame[^{}]*)\{([^{}]*)\}',s,re.I):
+              print('SELECTOR',m.group(1).strip()[:220],'BODY',m.group(2).strip()[:350])
           PY
