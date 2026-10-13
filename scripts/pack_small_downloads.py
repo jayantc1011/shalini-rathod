@@ -47,6 +47,11 @@ for category,paths in [('Core',website),('PDFs',pdfs),('Videos',videos)]:
  for i,batch in enumerate(group(paths),1):
   name=f'Shalini-{category}-Part-{i:02d}.zip'
   pack=make_zip(name,batch)
+  # GitHub upload-artifact creates the outer ZIP. Upload an extracted directory,
+  # avoiding a confusing ZIP-inside-another-ZIP.
+  shard=dest/'shards'/name.removesuffix('.zip')
+  shard.mkdir(parents=True,exist_ok=True)
+  with ZipFile(pack) as packaged:packaged.extractall(shard)
   parts.append({'name':name,'category':category,'bytes':pack.stat().st_size,'files':[str(p.relative_to(root)) for p in batch]})
   print('CREATED',name,round(pack.stat().st_size/1024/1024,1),'MiB',
         'FILES',len(batch),'FIRST',str(batch[0].relative_to(root)),'LAST',str(batch[-1].relative_to(root)))
