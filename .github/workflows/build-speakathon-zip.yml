@@ -1,4 +1,4 @@
-name: Build Updated Speakathon Website ZIP
+name: Build Redesigned Speakathon Learning Studio
 on:
   push:
     branches:
@@ -19,6 +19,7 @@ jobs:
         run: |
           python scripts/build_self_hosted_lms.py output/shalini-rathod-website
           python scripts/fix_speakathon_video.py output/shalini-rathod-website
+          python scripts/rebuild_study_ui.py output/shalini-rathod-website
       - name: Download original 21 PDFs into website
         run: |
           set -euo pipefail
@@ -61,9 +62,13 @@ jobs:
         run: |
           set -euo pipefail
           node --check output/shalini-rathod-website/courses-data.js
-          node --check output/shalini-rathod-website/lms-player.js
-          grep -q 'sr-video-portrait' output/shalini-rathod-website/style.css
-          grep -q 'aspect-ratio:9/16' output/shalini-rathod-website/style.css
+          node --check output/shalini-rathod-website/academy-learn.js
+          grep -q 'class="learn-video"' output/shalini-rathod-website/lms-learn.html
+          grep -q 'aspect-ratio:9/16' output/shalini-rathod-website/academy-learn.css
+          grep -q 'video.currentTime>limit' output/shalini-rathod-website/academy-learn.js
+          test ! -f output/shalini-rathod-website/lms-player.js
+          ! grep -q 'SPEAKATHON STUDY SPACE' output/shalini-rathod-website/style.css
+          test -f output/shalini-rathod-website/academy-learn.js
           node --check output/shalini-rathod-website/lms.js
           python - <<'PY'
           import json
@@ -85,7 +90,7 @@ jobs:
       - name: Package downloadable website ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Shalini-Speakathon-Website-Updated
+          name: Shalini-Speakathon-Clean-Learning-UI
           path: output/shalini-rathod-website/
           retention-days: 1
           compression-level: 0
