@@ -1,0 +1,160 @@
+name: Prepare Small Shalini Website Downloads
+on:
+  push:
+    branches:
+      - speakathon-self-hosted-course-20261013
+permissions:
+  contents: read
+  actions: read
+jobs:
+  split:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore final verified clean website
+        uses: actions/download-artifact@v4
+        with:
+          name: Shalini-Clean-LMS-Website-TEST
+          run-id: 38415590627
+          repository: jayantc1011/shalini-rathod
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: output/shalini-rathod-website
+      - name: Make small directly extractable website and media packages
+        run: |
+          python scripts/pack_small_downloads.py
+      - name: Upload download instructions
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Package-Manifest
+          path: output/parts/PARTS-MANIFEST.json
+          compression-level: 9
+          retention-days: 7
+      - name: Upload Core 01
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Core-Part-01
+          path: output/parts/shards/Shalini-Core-Part-01/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload Core 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Core-Part-02
+          path: output/parts/shards/Shalini-Core-Part-02/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload Core 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Core-Part-03
+          path: output/parts/shards/Shalini-Core-Part-03/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload PDFs 01
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-PDFs-Part-01
+          path: output/parts/shards/Shalini-PDFs-Part-01/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload PDFs 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-PDFs-Part-02
+          path: output/parts/shards/Shalini-PDFs-Part-02/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload PDFs 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-PDFs-Part-03
+          path: output/parts/shards/Shalini-PDFs-Part-03/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload PDFs 04
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-PDFs-Part-04
+          path: output/parts/shards/Shalini-PDFs-Part-04/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload PDFs 05
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-PDFs-Part-05
+          path: output/parts/shards/Shalini-PDFs-Part-05/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload Videos 01
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Videos-Part-01
+          path: output/parts/shards/Shalini-Videos-Part-01/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload Videos 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Videos-Part-02
+          path: output/parts/shards/Shalini-Videos-Part-02/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload Videos 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Videos-Part-03
+          path: output/parts/shards/Shalini-Videos-Part-03/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload Videos 04
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Videos-Part-04
+          path: output/parts/shards/Shalini-Videos-Part-04/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload Videos 05
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Videos-Part-05
+          path: output/parts/shards/Shalini-Videos-Part-05/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload Videos 06
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Videos-Part-06
+          path: output/parts/shards/Shalini-Videos-Part-06/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload Videos 07
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Videos-Part-07
+          path: output/parts/shards/Shalini-Videos-Part-07/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Upload Videos 08
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Videos-Part-08
+          path: output/parts/shards/Shalini-Videos-Part-08/
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: ignore
