@@ -11,10 +11,12 @@ jobs:
       - name: Inspect original recording and CSS
         run: |
           curl -fLsS --retry 2 -o day1.mp4 "https://at.adobe.com/A1WQFRVTHDCZCRLI"
+          python -m pip install -q imageio-ffmpeg
+          FFMPEG=$(python -c 'import imageio_ffmpeg; print(imageio_ffmpeg.get_ffmpeg_exe())')
           echo "VIDEO METADATA"
-          ffprobe -v error -select_streams v:0 -show_entries stream=width,height,sample_aspect_ratio,display_aspect_ratio,rotation,codec_name -of json day1.mp4
+          $FFMPEG -hide_banner -i day1.mp4 -f null - 2>&1 | head -24 || true
           echo "EXTRACT VIDEO ROTATION DATA"
-          ffprobe -v error -select_streams v:0 -show_entries stream_side_data -of json day1.mp4
+          echo 'Read container-level rotation details from ffmpeg above'
           curl -fLsS --retry 2 -o latest.zip "https://at.adobe.com/RudnTowCZMZuUBr7"
           unzip -oq latest.zip -d src
           python - <<'PY'
