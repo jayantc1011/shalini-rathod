@@ -18,6 +18,7 @@ jobs:
       - name: Upgrade LMS course UI and remove Drive links
         run: |
           python scripts/build_self_hosted_lms.py output/shalini-rathod-website
+          python scripts/fix_speakathon_video.py output/shalini-rathod-website
       - name: Download original 21 PDFs into website
         run: |
           set -euo pipefail
@@ -61,6 +62,8 @@ jobs:
           set -euo pipefail
           node --check output/shalini-rathod-website/courses-data.js
           node --check output/shalini-rathod-website/lms-player.js
+          grep -q 'sr-video-portrait' output/shalini-rathod-website/style.css
+          grep -q 'video.videoHeight>video.videoWidth' output/shalini-rathod-website/lms-player.js
           node --check output/shalini-rathod-website/lms.js
           python - <<'PY'
           import json
