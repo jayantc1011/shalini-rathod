@@ -1,5 +1,6 @@
 from pathlib import Path
-import json,re,subprocess,sys,os
+import json,re,subprocess,sys,os,wave
+import numpy as np
 from faster_whisper import WhisperModel
 from pypdf import PdfReader
 
@@ -24,7 +25,10 @@ for day in [1,2,3,8,9,10,11,15]:
  if not mp4.exists():continue
  audio=Path("/tmp/intro-audio.wav")
  subprocess.run(["ffmpeg","-y","-nostdin","-v","error","-ss","0","-t","115","-i",str(mp4),"-ar","16000","-ac","1",str(audio)],check=True)
- chunks,info=model.transcribe(str(audio),language="en",beam_size=2,vad_filter=True,condition_on_previous_text=False)
+ with wave.open(str(audio),"rb") as wav:
+  assert wav.getframerate()==16000 and wav.getnchannels()==1 and wav.getsampwidth()==2
+  pcm=np.frombuffer(wav.readframes(wav.getnframes()),dtype=np.int16).astype(np.float32)/32768.0
+ chunks,info=model.transcribe(pcm,language="en",beam_size=2,vad_filter=True,condition_on_previous_text=False)
  utterances=[{"start":round(seg.start,1),"text":seg.text.strip()} for seg in chunks]
  print(json.dumps({"day":day,"mp4":mp4.name,"intro_115s":utterances},ensure_ascii=False))
  print("DONE DAY",day,flush=True)
