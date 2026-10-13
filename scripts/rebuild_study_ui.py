@@ -189,7 +189,7 @@ css_new=r'''/* Shalini Academy — focused learning player, October 2026.
 .fresh-learn #video-stage:fullscreen .learn-big-play{z-index:4}
 @media(max-width:1200px){.fresh-learn .learn-container{width:min(100% - 44px,1460px)}.fresh-learn .learn-layout{grid-template-columns:minmax(240px,310px) minmax(290px,1fr) 250px;gap:22px}.fresh-learn .learn-video{width:min(100%,285px)}.fresh-learn .learn-video-bar{width:min(100%,285px)}.fresh-learn .learn-outline{padding-left:15px}}
 @media(max-width:1000px){.fresh-learn .learn-layout{grid-template-columns:minmax(230px,300px) minmax(320px,1fr)}.fresh-learn .learn-outline{grid-column:1/-1;position:static;border:0;border-top:1px solid var(--learn-border);padding:20px 0}.fresh-learn .learn-outline-list{max-height:360px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.fresh-learn .learn-week-block{margin:0}.fresh-learn .learn-video{width:min(100%,285px)}}
-@media(max-width:690px){.fresh-learn .learn-container{width:calc(100% - 28px)}.fresh-learn .learn-top{min-height:62px;grid-template-columns:1fr auto;gap:6px}.fresh-learn .learn-course-brand{font-size:12px}.fresh-learn .learn-back{grid-column:1/-1;display:none}.fresh-learn .learn-overall{width:105px;font-size:10px}.fresh-learn .learn-layout{grid-template-columns:1fr;gap:12px;padding-top:20px}.fresh-learn .learn-video{width:min(100%,275px)}.fresh-learn .learn-video-bar{width:min(100%,275px)}.fresh-learn .learn-lesson{padding:18px 1px 0}.fresh-learn .learn-lesson h1{font-size:31px}.fresh-learn .learn-summary{margin-bottom:21px}.fresh-learn .learn-complete{position:sticky;bottom:0;background:#f8f9f5;padding:12px 0 16px;z-index:6;box-shadow:0 -12px 20px #f8f9f5e8}.fresh-learn .learn-outline-list{grid-template-columns:1fr;max-height:350px;display:none}.fresh-learn .learn-outline.is-open .learn-outline-list{display:block}.fresh-learn .learn-outline-toggle{display:inline-flex;gap:7px;align-items:center;background:#edf4e5;border:0;color:#40633d;border-radius:8px;font-size:12px;font-weight:800;padding:9px 11px;cursor:pointer}.fresh-learn .learn-outline{grid-column:auto;margin-top:10px}.fresh-learn #worksheet-frame{height:74vh}.fresh-learn .learn-dialog-head{padding:13px}.fresh-learn .learn-dialog-head h2{font-size:15px}}
+@media(max-width:690px){ .fresh-learn .learn{padding-bottom:110px}.fresh-learn .learn-container{width:calc(100% - 28px)}.fresh-learn .learn-complete{position:fixed;left:0;right:0;bottom:0;background:#f8f9f5;padding:9px 16px 12px;z-index:60;box-shadow:0 -10px 22px #e1e8dbbd;border-top:1px solid #d9e3d2}.fresh-learn .learn-completion-note{margin-bottom:5px;text-align:center}.fresh-learn .learn-complete-btn{max-width:520px;margin:auto;padding:12px 16px}.fresh-learn .learn-top{min-height:62px;grid-template-columns:1fr auto;gap:6px}.fresh-learn .learn-course-brand{font-size:12px}.fresh-learn .learn-back{grid-column:1/-1;display:none}.fresh-learn .learn-overall{width:105px;font-size:10px}.fresh-learn .learn-layout{grid-template-columns:1fr;gap:12px;padding-top:20px}.fresh-learn .learn-video{width:min(100%,275px)}.fresh-learn .learn-video-bar{width:min(100%,275px)}.fresh-learn .learn-lesson{padding:18px 1px 0}.fresh-learn .learn-lesson h1{font-size:31px}.fresh-learn .learn-summary{margin-bottom:21px}.fresh-learn .learn-outline-list{grid-template-columns:1fr;max-height:350px;display:none}.fresh-learn .learn-outline.is-open .learn-outline-list{display:block}.fresh-learn .learn-outline-toggle{display:inline-flex;gap:7px;align-items:center;background:#edf4e5;border:0;color:#40633d;border-radius:8px;font-size:12px;font-weight:800;padding:9px 11px;cursor:pointer}.fresh-learn .learn-outline{grid-column:auto;margin-top:10px}.fresh-learn #worksheet-frame{height:74vh}.fresh-learn .learn-dialog-head{padding:13px}.fresh-learn .learn-dialog-head h2{font-size:15px}}
 @media(max-width:360px){.fresh-learn .learn-course-brand>span:last-child{font-size:11px}.fresh-learn .learn-video{width:min(100%,250px)}.fresh-learn .learn-video-bar{width:min(100%,250px)}}
 '''
 (root/"academy-learn.css").write_text(css_new,encoding="utf-8")
@@ -280,6 +280,7 @@ js=r'''(() => {
     $('lesson-summary').textContent=lesson.summary||'Your next speaking challenge.';
     $('lesson-practice').textContent=lesson.practice||'Watch the video and practise with purpose.';
     $('watch-example').hidden=!lesson.solutionUrl;
+    $('watch-example').querySelector('span:nth-child(2)').textContent='Watch example video';
     openVideo(lesson.videoUrl,'lesson');
     updateCompletion();updateOutline();setProgress();
     const url=new URL(location.href);
@@ -316,10 +317,7 @@ js=r'''(() => {
     }
     updatePlayLabel();
   });
-  video.addEventListener('error',()=>{
-    if(video.error && video.networkState!==HTMLMediaElement.NETWORK_NO_SOURCE)return;
-    showMissing();
-  });
+  video.addEventListener('error',()=>{showMissing();});
   $('full-screen').addEventListener('click',()=>{
     if(document.fullscreenElement)document.exitFullscreen?.();
     else stage.requestFullscreen?.();
