@@ -1,0 +1,25 @@
+name: Audit Shalini Website Pages
+on:
+  push:
+    branches:
+      - speakathon-self-hosted-course-20261013
+permissions:
+  contents: read
+  actions: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore most recent website package
+        uses: actions/download-artifact@v4
+        with:
+          name: Shalini-Speakathon-Video-Fullscreen-Fixed
+          run-id: 38407005855
+          repository: jayantc1011/shalini-rathod
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: output/shalini-rathod-website
+      - name: Examine obsolete pages, navigation and media
+        run: |
+          python scripts/audit_site_files.py
