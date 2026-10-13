@@ -1,0 +1,60 @@
+name: Fix Speakathon Fullscreen Video Controls
+on:
+  push:
+    branches:
+      - speakathon-self-hosted-course-20261013
+permissions:
+  contents: read
+  actions: read
+jobs:
+  upgrade:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore previous verified website and local video files
+        uses: actions/download-artifact@v4
+        with:
+          name: Shalini-Speakathon-Focused-Workspace-TEST
+          run-id: 38403645680
+          repository: jayantc1011/shalini-rathod
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: output/shalini-rathod-website
+      - name: Move controls inside video and improve matching video height
+        run: |
+          set -euo pipefail
+          python scripts/fix_fullscreen_player.py output/shalini-rathod-website
+          node --check output/shalini-rathod-website/academy-learn.js
+          python - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path("output/shalini-rathod-website")
+          html=(p/"lms-learn.html").read_text()
+          assert html.index('class="learn-video-bar"')>html.index('id="video-stage"')
+          assert html.index('class="learn-video-bar"')<html.index('class="learn-lesson"')
+          assert "id=\"volume-toggle\"" in html
+          assert "<footer" not in html
+          assert len(list((p/"assets/lms/pdfs").glob("day-*.pdf")))==21
+          included=[n for n in range(1,22) if (p/f"assets/lms/videos/day-{n:02d}.mp4").is_file()]
+          assert included==list(range(1,12))+[15]
+          assert (p/"assets/lms/videos/day-02.mp4").stat().st_size>1000000
+          print("VERIFIED included video days:",included)
+          print("VERIFIED missing video days:",[x for x in range(1,22) if x not in included])
+          PY
+      - name: Install Chromium
+        run: |
+          npm install --no-save playwright
+          npx playwright install chromium
+      - name: Test responsive media controls and fullscreen exit
+        run: |
+          python -m http.server 8877 --bind 127.0.0.1 --directory output/shalini-rathod-website >/tmp/shali-server.log 2>&1 &
+          sleep 2
+          node scripts/test_fullscreen_controls.mjs
+      - name: Export full website and media ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Speakathon-Video-Fullscreen-Fixed
+          path: output/shalini-rathod-website/
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
