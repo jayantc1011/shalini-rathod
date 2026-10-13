@@ -1,0 +1,89 @@
+name: Build Updated Speakathon Website ZIP
+on:
+  push:
+    branches:
+      - speakathon-self-hosted-course-20261013
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Read latest verified website ZIP
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 2 -o source.zip "https://at.adobe.com/RudnTowCZMZuUBr7"
+          unzip -t source.zip | tail -2
+          mkdir -p output
+          unzip -oq source.zip -d output
+      - name: Upgrade LMS course UI and remove Drive links
+        run: |
+          python scripts/build_self_hosted_lms.py output/shalini-rathod-website
+      - name: Download original 21 PDFs into website
+        run: |
+          set -euo pipefail
+          dest="output/shalini-rathod-website/assets/lms/pdfs"
+          mkdir -p "$dest"
+          while read -r day url; do
+            echo "Downloading worksheet Day $day"
+            curl -fLsS --retry 2 --max-time 180 "$url" -o "$dest/day-$day.pdf"
+            python -c 'from pathlib import Path; import sys; p=Path(sys.argv[1]); assert p.stat().st_size>10000 and p.read_bytes()[:4]==b"%PDF", str(p)' "$dest/day-$day.pdf"
+          done <<'PDFS'
+          01 https://at.adobe.com/VtDmDVxo0071o4vj
+          02 https://at.adobe.com/jUG2bJ04Bxr4hyj2
+          03 https://at.adobe.com/AkPpjTkhNu3zk50I
+          04 https://at.adobe.com/E63h8GuqGnZhTbGN
+          05 https://at.adobe.com/OhsKMww3XMlCOQBH
+          06 https://at.adobe.com/9YjAg4aRb9S4zkVp
+          07 https://at.adobe.com/62bFwg2kWF1jtVUY
+          08 https://at.adobe.com/CRvGJNFrEwZgdbYJ
+          09 https://at.adobe.com/rLHaLGzbHILUWWpd
+          10 https://at.adobe.com/lO70K2Wn860tubgf
+          11 https://at.adobe.com/jPWSFhvNzEdpBTYa
+          12 https://at.adobe.com/50CGOyssCQM2BMq2
+          13 https://at.adobe.com/OPEa5QKrJkZdGU6o
+          14 https://at.adobe.com/NX4rbi2KtmryjFLL
+          15 https://at.adobe.com/3rtInPETuSDjiF2c
+          16 https://at.adobe.com/9p2AEuzZOIuAI6tu
+          17 https://at.adobe.com/8FqmldrJxz00Cili
+          18 https://at.adobe.com/RJXb1xplSHojYMrV
+          19 https://at.adobe.com/4mOYo8n1dzn1RRWk
+          20 https://at.adobe.com/JPmQrg1Q3yQnWtky
+          21 https://at.adobe.com/nl3rv05k9FTYawSY
+          PDFS
+      - name: Include original Day 1 recording
+        run: |
+          set -euo pipefail
+          video="output/shalini-rathod-website/assets/lms/videos/day-01.mp4"
+          curl -fLsS --retry 2 --max-time 240 "https://at.adobe.com/A1WQFRVTHDCZCRLI" -o "$video"
+          python -c 'from pathlib import Path; import sys; p=Path(sys.argv[1]); data=p.read_bytes()[:32]; assert p.stat().st_size>1000000 and b"ftyp" in data, f"Not MP4: {p}"; print("Video ready:",p.stat().st_size,"bytes")' "$video"
+      - name: Verify files and generate media manifest
+        run: |
+          set -euo pipefail
+          node --check output/shalini-rathod-website/courses-data.js
+          node --check output/shalini-rathod-website/lms-player.js
+          node --check output/shalini-rathod-website/lms.js
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("output/shalini-rathod-website")
+          assert (p/"index.html").exists()
+          assert (p/"services.html").exists()
+          assert (p/"lms-learn.html").exists()
+          assert len(list((p/"assets/lms/pdfs").glob("day-*.pdf")))==21
+          assert (p/"assets/lms/videos/day-01.mp4").stat().st_size>50000000
+          text=(p/"courses-data.js").read_text()
+          assert "drive.google.com" not in text
+          assert "drive.google.com" not in (p/"lms-learn.html").read_text()
+          manifest={"included":{"videos":[1],"daily_worksheets":list(range(1,22))},"requires_media_upload":{"videos":list(range(2,22)),"extra_resources":True},"notes":"All lessons play onsite after the corresponding MP4 is uploaded to assets/lms/videos; no Google Drive links remain in the Speakathon LMS."}
+          (p/"MEDIA_STATUS.json").write_text(json.dumps(manifest,indent=2))
+          print("VALIDATED 21 PDFs + day 1 MP4 + on-site player + original website pages")
+          PY
+          du -sh output/shalini-rathod-website
+      - name: Package downloadable website ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Speakathon-Website-Updated
+          path: output/shalini-rathod-website/
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
