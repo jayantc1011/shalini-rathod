@@ -1,0 +1,58 @@
+name: Build Fullscreen Speakathon Workspace ZIP
+on:
+  push:
+    branches:
+      - speakathon-self-hosted-course-20261013
+permissions:
+  contents: read
+  actions: read
+jobs:
+  focused-workspace:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore verified website and previously packaged videos
+        uses: actions/download-artifact@v4
+        with:
+          name: Shalini-Speakathon-Additional-Videos
+          run-id: 38399312766
+          repository: jayantc1011/shalini-rathod
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: output/shalini-rathod-website
+      - name: Remove learner footer and add focus-mode lesson panel
+        run: |
+          set -euo pipefail
+          python scripts/focus_learn_workspace.py output/shalini-rathod-website
+          node --check output/shalini-rathod-website/academy-learn.js
+          python - <<'PY'
+          from pathlib import Path
+          root=Path('output/shalini-rathod-website')
+          assert '<footer' not in (root/'lms-learn.html').read_text().lower()
+          assert (root/'academy-workspace.css').is_file()
+          assert len(list((root/'assets/lms/pdfs').glob('day-*.pdf')))==21
+          actual=[n for n in range(1,22) if (root/f'assets/lms/videos/day-{n:02d}.mp4').exists()]
+          assert actual==list(range(1,12))+[15],actual
+          assert (root/'assets/lms/videos/day-02.mp4').stat().st_size>1000000
+          assert (root/'assets/lms/videos/day-11.mp4').stat().st_size>1000000
+          assert (root/'assets/lms/videos/day-15.mp4').stat().st_size>1000000
+          assert len(list(root.glob('*.html')))>=7
+          print('SITE VALIDATION PASSED',len(actual),'videos, 21 PDF worksheets')
+          PY
+      - name: Install browser for desktop and mobile checks
+        run: |
+          npm install --no-save playwright
+          npx playwright install chromium
+      - name: Verify single-screen workspace and temporary day-skip control
+        run: |
+          python -m http.server 8877 --bind 127.0.0.1 --directory output/shalini-rathod-website >/tmp/speakathon-server.log 2>&1 &
+          sleep 2
+          node scripts/test_immersive_workspace.mjs
+      - name: Package full updated website
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Speakathon-Focused-Workspace-TEST
+          path: output/shalini-rathod-website/
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
