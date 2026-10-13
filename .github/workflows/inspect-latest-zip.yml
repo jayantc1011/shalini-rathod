@@ -8,23 +8,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch latest source ZIP
+      - name: Fetch and unpack actual latest source
         run: |
-          set -euxo pipefail
-          curl -fL --max-time 120 --retry 2 -o latest.zip "https://at.adobe.com/RudnTowCZMZuUBr7"
-          file latest.zip
-          du -h latest.zip
-          unzip -t latest.zip | tail -5
-      - name: Show project and course layout
+          curl -fLsS --max-time 120 -o latest.zip "https://at.adobe.com/RudnTowCZMZuUBr7"
+          unzip -t latest.zip | tail -2
+          unzip -oq latest.zip -d src
+      - name: Report course data, layout, renderer
         run: |
-          unzip -l latest.zip | head -55
-          mkdir -p extracted
-          cd extracted
-          unzip -oq ../latest.zip
-          echo "CHALLENGE REFERENCES"
-          grep -Rin -m 5 -E 'speakathon|drive.google.com|challenge 1' --include='*.js' --include='*.html' . | cut -c1-210 | head -45 || :
-      - uses: actions/upload-artifact@v4
-        with:
-          name: inspected-source
-          path: latest.zip
-          retention-days: 2
+          python - <<'PY'
+          from pathlib import Path
+          root=Path("src/shalini-rathod-website")
+          for f in ["courses-data.js","lms.js","lms-learn.html","README.md"]:
+              s=(root/f).read_text()
+              print("\n\n======== FILE",f,"========")
+              if f=="courses-data.js":
+                  print(s[:24000])
+              elif f=="lms.js":
+                  print(s[:24000])
+              elif f=="lms-learn.html":
+                  print(s[:13000])
+              else:
+                  print(s[:4000])
+          PY
