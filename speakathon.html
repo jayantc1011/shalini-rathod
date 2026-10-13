@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f5f0">
+  <meta name="description" content="21-Day Speakathon Challenge — watch video lessons, read your workbooks and practise speaking, all in one place.">
+  <title>21-Day Speakathon | Shalini Rathod</title>
+  <link rel="stylesheet" href="speakathon.css">
+  <script src="speakathon.js" defer></script>
+</head>
+<body class="speakathon-body">
+  <a class="skip-link" href="#lesson-main">Skip to lesson</a>
+  <header class="academy-header">
+    <a class="brand" href="index.html" aria-label="Shalini Rathod — Home"><span class="brand-mark">S<span class="brand-star">✦</span>R</span><span class="brand-copy"><strong>SHALINI RATHOD</strong><small>THE CONFIDENCE ACADEMY</small></span></a>
+    <div class="header-course"><span class="header-divider"></span><span class="header-course-label">MY LEARNING</span><span class="header-course-name">21-Day Speakathon</span></div>
+    <a class="exit-link" href="services.html#self-learning">Exit course <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <div class="learning-shell">
+    <aside class="curriculum-sidebar" aria-label="Course curriculum">
+      <div class="sidebar-heading">
+        <div class="micro-eyebrow">SPEAK WITH CONFIDENCE</div>
+        <h2>21-Day Speakathon</h2>
+        <p>Small steps. A stronger voice. One day at a time.</p>
+      </div>
+      <div class="progress-panel">
+        <div class="progress-caption"><span>Your journey</span><strong id="progress-text">0 of 21 complete</strong></div>
+        <div class="progress-track" role="progressbar" aria-label="Course progress" aria-valuemin="0" aria-valuemax="21" aria-valuenow="0" id="progress-track"><span id="progress-fill"></span></div>
+      </div>
+      <div class="lesson-search-wrap">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.7" cy="10.7" r="6.8"></circle><path d="m16 16 4.8 4.8"></path></svg>
+        <label class="sr-only" for="lesson-search">Search lessons</label>
+        <input id="lesson-search" type="search" placeholder="Find a lesson..." autocomplete="off">
+      </div>
+      <div class="module-label"><span>COURSE CONTENT</span><span>21 lessons</span></div>
+      <nav id="lesson-list" class="lesson-list" aria-label="Daily lessons"></nav>
+      <div class="sidebar-tip"><span aria-hidden="true">✦</span><p>Consistency builds confidence. Show up for your voice every day.</p></div>
+    </aside>
+
+    <main class="lesson-main" id="lesson-main">
+      <div class="lesson-breadcrumb">MY LEARNING <span aria-hidden="true">/</span> 21-DAY SPEAKATHON <span aria-hidden="true">/</span> <strong id="crumb-day">DAY 01</strong></div>
+      <section class="lesson-intro" aria-labelledby="lesson-title">
+        <div><span class="day-chip" id="day-chip">DAY 01 OF 21</span><h1 id="lesson-title">Getting Comfortable on Camera</h1><p id="lesson-subtitle">A space to practise, explore and grow your confidence.</p></div>
+        <button type="button" id="complete-button" class="complete-button" aria-pressed="false"><span class="check-icon" aria-hidden="true">✓</span><span id="complete-label">Mark complete</span></button>
+      </section>
+
+      <div class="lesson-body-grid">
+        <div class="lesson-primary">
+          <div class="media-container" id="video-panel">
+            <div class="media-titlebar"><span class="playing-pill"><span class="live-dot"></span>VIDEO LESSON</span><span class="format-pill">16:9 widescreen</span></div>
+            <div class="video-frame">
+              <video id="lesson-video" controls playsinline preload="metadata" controlsList="nodownload" aria-label="Lesson video"></video>
+              <div class="media-unavailable" id="video-unavailable" hidden>
+                <div class="unavailable-symbol" aria-hidden="true">▶</div>
+                <h3>Video not uploaded yet</h3>
+                <p id="video-error-copy">The lesson player is ready. Add the video to your website's media folder to make it available here.</p>
+              </div>
+            </div>
+            <div class="video-footer"><span><span class="video-footer-icon">◷</span> Learn at your own pace</span><span>Original lesson recording</span></div>
+          </div>
+
+          <nav class="content-tabs" aria-label="Lesson resources"><button class="content-tab active" type="button" data-tab="overview" aria-current="page">Overview</button><button class="content-tab" type="button" data-tab="workbook">Practice workbook <span class="tab-pdf">PDF</span></button><button class="content-tab" type="button" data-tab="notes">My notes</button></nav>
+
+          <section id="overview-panel" class="tab-panel active" aria-label="Lesson overview">
+            <div class="content-block"><span class="section-label">TODAY'S FOCUS</span><h2>What you'll learn</h2><p id="lesson-goal"></p></div>
+            <div class="task-card"><div class="task-card-icon">✦</div><div><span class="section-label">YOUR SPEAKATHON CHALLENGE</span><h3>Put it into practice</h3><p id="lesson-task"></p></div></div>
+            <div class="guidance-strip"><span aria-hidden="true">✧</span><p>Watch the lesson, open the workbook, and record your practice. Progress matters more than perfection.</p></div>
+          </section>
+
+          <section id="workbook-panel" class="tab-panel" aria-label="Practice workbook" hidden>
+            <div class="pdf-title-row"><div><span class="section-label">COURSE MATERIALS</span><h2>Day <span id="pdf-day">01</span> practice workbook</h2><p>Read the original daily challenge without leaving your course.</p></div><a id="pdf-download" class="pdf-action" href="#" download>Save PDF ↓</a></div>
+            <div class="pdf-wrapper"><iframe id="pdf-frame" title="Daily practice PDF workbook" loading="lazy"></iframe><div class="pdf-fallback" id="pdf-fallback" hidden><span>▤</span><h3>Workbook not uploaded yet</h3><p>Place the matching PDF in the course media folder to display it here.</p></div></div>
+          </section>
+
+          <section id="notes-panel" class="tab-panel" aria-label="Private practice notes" hidden>
+            <div class="content-block"><span class="section-label">PERSONAL REFLECTION</span><h2>Your practice notes</h2><p>Capture your thoughts, new discoveries, or what you would like to improve next time. Notes stay in this browser.</p></div>
+            <label for="notes-input" class="notes-label">What did you notice in today's practice?</label>
+            <textarea id="notes-input" rows="10" placeholder="Today I felt more confident when…"></textarea><p id="note-status" class="note-status" role="status">Notes save automatically on this device.</p>
+          </section>
+
+          <div class="lesson-navigation"><button type="button" id="previous-lesson" class="next-prev"><span aria-hidden="true">←</span><span><small>PREVIOUS LESSON</small><strong id="previous-title">Previous</strong></span></button><button type="button" id="next-lesson" class="next-prev next"><span><small>NEXT LESSON</small><strong id="next-title">Next lesson</strong></span><span aria-hidden="true">→</span></button></div>
+        </div>
+        <aside class="learning-aside">
+          <div class="mentor-note"><span class="mentor-icon">✺</span><span class="section-label">A NOTE FROM SHALINI</span><blockquote>“Your voice deserves to be heard. Start where you are and keep showing up.”</blockquote><span class="mentor-signature">Shalini Rathod</span></div>
+          <div class="aside-card"><span class="section-label">YOUR LEARNING CHECKLIST</span><ul><li><span>01</span> Watch today's video lesson</li><li><span>02</span> Read your practice workbook</li><li><span>03</span> Record your speaking exercise</li><li><span>04</span> Mark the lesson complete</li></ul></div>
+        </aside>
+      </div>
+    </main>
+  </div>
+</body>
+</html>
