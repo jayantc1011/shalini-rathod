@@ -48,3 +48,19 @@ print("===== DIRECT MEDIA =====")
 v=root/'assets/lms/videos'
 for p in sorted(v.glob('*')):
  print(p.name,p.stat().st_size)
+
+print("===== PAGE TITLE AND FIRST H1 =====")
+for p in sorted(root.glob("*.html")):
+ txt=p.read_text(errors="ignore")
+ title=re.search(r'<title[^>]*>(.*?)</title>',txt,re.S|re.I)
+ h1=re.search(r'<h1[^>]*>(.*?)</h1>',txt,re.S|re.I)
+ clean=lambda x: re.sub(r'<[^>]*>','',x or '').strip()[:180]
+ print(p.name,"TITLE:",clean(title.group(1) if title else ''),"H1:",clean(h1.group(1) if h1 else ''))
+print("===== SOURCE LINK CONTEXT FOR LEGACY PAGES =====")
+for legacy in ['course.html','courses.html','dashboard.html','enrollment.html','login.html','package.html','programs.html','communication-course.html']:
+ for source in sorted(root.iterdir()):
+  if not source.is_file() or source.suffix.lower() not in ('.js','.html'): continue
+  txt=source.read_text(errors="ignore")
+  for match in list(re.finditer(r'(?<![-\w])'+re.escape(legacy),txt))[:3]:
+   loc=match.start();frag=txt[max(0,loc-110):loc+140].replace('\n',' ')
+   print(legacy, source.name, '...' + frag + '...')
