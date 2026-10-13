@@ -58,6 +58,37 @@ jobs:
           video="output/shalini-rathod-website/assets/lms/videos/day-01.mp4"
           curl -fLsS --retry 2 --max-time 240 "https://at.adobe.com/A1WQFRVTHDCZCRLI" -o "$video"
           python -c 'from pathlib import Path; import sys; p=Path(sys.argv[1]); data=p.read_bytes()[:32]; assert p.stat().st_size>1000000 and b"ftyp" in data, f"Not MP4: {p}"; print("Video ready:",p.stat().st_size,"bytes")' "$video"
+      - name: Add original lesson videos and example recordings
+        run: |
+          set -euo pipefail
+          python -m pip install -q imageio-ffmpeg
+          FFMPEG="$(python -c 'import imageio_ffmpeg;print(imageio_ffmpeg.get_ffmpeg_exe())')"
+          dest="output/shalini-rathod-website/assets/lms/videos"
+          mkdir -p "$dest"
+          while read -r name url; do
+            echo "DOWNLOAD: $name"
+            curl -fLsS --retry 3 --retry-delay 2 --max-time 1200 "$url" -o "/tmp/speakathon-input.mp4"
+            python -c 'import sys;from pathlib import Path;p=Path(sys.argv[1]);assert p.stat().st_size>500000 and b"ftyp" in p.read_bytes()[:32],f"Invalid media: {p}"' "/tmp/speakathon-input.mp4"
+            "$FFMPEG" -y -loglevel error -stats -i /tmp/speakathon-input.mp4 -map 0:v:0 -map 0:a:0? -vf "scale='min(540,iw)':-2,fps=25" -c:v libx264 -preset veryfast -crf 25 -maxrate 1100k -bufsize 2300k -pix_fmt yuv420p -c:a aac -b:a 96k -movflags +faststart "$dest/$name.mp4"
+            python -c 'import sys;from pathlib import Path;p=Path(sys.argv[1]);assert p.stat().st_size>200000 and b"ftyp" in p.read_bytes()[:32],f"Invalid transcoded video: {p}";print("READY",p,p.stat().st_size)' "$dest/$name.mp4"
+            rm -f /tmp/speakathon-input.mp4
+          done <<'RECORDINGS'
+          day-02 https://at.adobe.com/qathBl8yygkiPzC4
+          day-03 https://at.adobe.com/2LFG5f3pNOLNwHgt
+          day-04 https://at.adobe.com/hU671LNc4DOcxpwV
+          day-05 https://at.adobe.com/LpUc9iDyEaGRKDA6
+          day-06 https://at.adobe.com/o4QQE0iKig15qfUP
+          day-07 https://at.adobe.com/UYIO7G0GDkUbksNf
+          day-08 https://at.adobe.com/vkKVGrt6KbzEkdDi
+          day-09 https://at.adobe.com/shlmDwE2xmNZiF0h
+          day-10 https://at.adobe.com/zLKiC3FVFiFTbCOE
+          day-11 https://at.adobe.com/HbhQ9xX0mgnyjodv
+          day-15 https://at.adobe.com/s05woG0mnO6tvI4E
+          day-02-solution https://at.adobe.com/QqYIP4ABBirb5w3e
+          day-03-solution https://at.adobe.com/rg97CVzstCCa9Wgp
+          introduction https://at.adobe.com/NgJIyVmsf6gBWNk4
+          closing https://at.adobe.com/vl1PFdaDg6r5BhLr
+          RECORDINGS
       - name: Verify files and generate media manifest
         run: |
           set -euo pipefail
@@ -82,15 +113,21 @@ jobs:
           text=(p/"courses-data.js").read_text()
           assert "drive.google.com" not in text
           assert "drive.google.com" not in (p/"lms-learn.html").read_text()
-          manifest={"included":{"videos":[1],"daily_worksheets":list(range(1,22))},"requires_media_upload":{"videos":list(range(2,22)),"extra_resources":True},"notes":"All lessons play onsite after the corresponding MP4 is uploaded to assets/lms/videos; no Google Drive links remain in the Speakathon LMS."}
+          included_days=[d for d in range(1,22) if (p/f"assets/lms/videos/day-{d:02d}.mp4").is_file()]
+          needed_days=[d for d in range(1,22) if d not in included_days]
+          assert included_days==list(range(1,12))+[15],f"Unexpected available days {included_days}"
+          specials=["day-02-solution","day-03-solution","introduction","closing"]
+          assert all((p/f"assets/lms/videos/{name}.mp4").exists() for name in specials)
+          manifest={"included":{"videos":included_days,"daily_worksheets":list(range(1,22)),"extra_recordings":specials},"requires_media_upload":{"videos":needed_days,"extra_resources":True},"notes":"Videos and PDFs load locally; there are no Drive redirects. Oversized original day recordings require authorized manual transfer before those days can be played."}
+          (p/"SELF_HOSTED_MEDIA_README.md").write_text("# Speakathon locally hosted recordings\\n\\nIncluded days: "+", ".join(map(str,included_days))+"\\nMissing days: "+", ".join(map(str,needed_days))+"\\n\\nCopy the remaining challenge videos to assets/lms/videos/day-XX.mp4. The learning page never links out to Drive.\\n",encoding="utf-8")
           (p/"MEDIA_STATUS.json").write_text(json.dumps(manifest,indent=2))
-          print("VALIDATED 21 PDFs + day 1 MP4 + on-site player + original website pages")
+          print('VALIDATED video days',included_days,'missing',needed_days,'21 PDFs and on-site player')
           PY
           du -sh output/shalini-rathod-website
       - name: Package downloadable website ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Shalini-Speakathon-Clean-Learning-UI
+          name: Shalini-Speakathon-Additional-Videos
           path: output/shalini-rathod-website/
           retention-days: 1
           compression-level: 0
