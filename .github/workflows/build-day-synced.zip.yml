@@ -1,0 +1,49 @@
+name: Build Day-Synchronized Speakathon ZIP
+on:
+  push:
+    branches:
+      - speakathon-self-hosted-course-20261013
+permissions:
+  contents: read
+  actions: read
+jobs:
+  sync-days:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore latest clean website ZIP
+        uses: actions/download-artifact@v4
+        with:
+          name: Shalini-Final-Clean-Speakathon-ZIP
+          run-id: 38429288876
+          repository: jayantc1011/shalini-rathod
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: output/shalini-rathod-website
+      - name: Enforce and label day-by-day source integrity
+        run: |
+          set -euo pipefail
+          python scripts/enforce_day_sync.py output/shalini-rathod-website
+          node --check output/shalini-rathod-website/academy-learn.js
+          python scripts/final_verify_media_mapping.py output/shalini-rathod-website
+          test ! -f output/shalini-rathod-website/course.html
+          test -f output/shalini-rathod-website/assets/lms/videos/day-11.mp4
+          test -f output/shalini-rathod-website/assets/lms/pdfs/day-21.pdf
+      - name: Install Chromium browser
+        run: |
+          npm install --no-save playwright
+          npx playwright install chromium
+      - name: Test all 21 lesson bindings and fullscreen UX
+        run: |
+          python -m http.server 8877 --bind 127.0.0.1 --directory output/shalini-rathod-website > /tmp/server.log 2>&1 &
+          sleep 2
+          node scripts/test_day_sync.mjs
+          node scripts/test_fullscreen_controls.mjs
+      - name: Publish website ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Lessons-Day-Synchronized
+          path: output/shalini-rathod-website/
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
