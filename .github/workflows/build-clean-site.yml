@@ -1,0 +1,47 @@
+name: Build Shalini Clean Website ZIP
+on:
+  push:
+    branches:
+      - speakathon-self-hosted-course-20261013
+permissions:
+  contents: read
+  actions: read
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore latest verified website and all packaged media
+        uses: actions/download-artifact@v4
+        with:
+          name: Shalini-Speakathon-Video-Fullscreen-Fixed
+          run-id: 38407005855
+          repository: jayantc1011/shalini-rathod
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: output/shalini-rathod-website
+      - name: Delete duplicate pages and repair all links
+        run: |
+          set -euo pipefail
+          python scripts/clean_final_site.py output/shalini-rathod-website
+          node --check output/shalini-rathod-website/script.js
+          node --check output/shalini-rathod-website/lms.js
+          node --check output/shalini-rathod-website/academy-learn.js
+          du -sh output/shalini-rathod-website
+      - name: Install headless browser
+        run: |
+          npm install --no-save playwright
+          npx playwright install chromium
+      - name: Verify all navigation and playable Day 2
+        run: |
+          python -m http.server 8877 --bind 127.0.0.1 --directory output/shalini-rathod-website >/tmp/website-server.log 2>&1 &
+          sleep 2
+          node scripts/test_clean_final_site.mjs
+      - name: Export cleaned Shalini website ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Clean-LMS-Website-TEST
+          path: output/shalini-rathod-website/
+          retention-days: 1
+          compression-level: 0
+          if-no-files-found: error
