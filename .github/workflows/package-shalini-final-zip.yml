@@ -1,0 +1,40 @@
+name: Shalini Final Verified ZIP — No Drive Links
+on:
+  push:
+    branches:
+      - speakathon-self-hosted-course-20261013
+permissions:
+  contents: read
+  actions: read
+jobs:
+  final-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore latest clean website package
+        uses: actions/download-artifact@v4
+        with:
+          name: Shalini-Clean-LMS-Website-TEST
+          run-id: 38415590627
+          repository: jayantc1011/shalini-rathod
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: output/shalini-rathod-website
+      - name: Verify exact day mapping, local files, and remove redundant documents
+        run: |
+          set -euo pipefail
+          python scripts/final_verify_media_mapping.py output/shalini-rathod-website
+          node --check output/shalini-rathod-website/academy-learn.js
+          node --check output/shalini-rathod-website/courses-data.js
+          test -f output/shalini-rathod-website/academy-workspace.css
+          ! test -f output/shalini-rathod-website/course.html
+          ! test -f output/shalini-rathod-website/courses.html
+          du -sh output/shalini-rathod-website
+      - name: Upload one complete ZIP for available media
+        uses: actions/upload-artifact@v4
+        with:
+          name: Shalini-Final-Clean-Speakathon-ZIP
+          path: output/shalini-rathod-website/
+          retention-days: 7
+          compression-level: 0
+          if-no-files-found: error
