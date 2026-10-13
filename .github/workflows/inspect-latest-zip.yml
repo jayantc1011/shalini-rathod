@@ -1,32 +1,28 @@
-name: Inspect Latest Shalini ZIP
+name: Verify Public Media Fetch
 on:
   push:
     branches:
       - speakathon-self-hosted-course-20261013
 jobs:
-  inspect-source:
+  verify-media:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fetch and unpack actual latest source
+      - name: Download one worksheet and video
         run: |
-          curl -fLsS --max-time 120 -o latest.zip "https://at.adobe.com/RudnTowCZMZuUBr7"
-          unzip -t latest.zip | tail -2
-          unzip -oq latest.zip -d src
-      - name: Report course data, layout, renderer
-        run: |
+          python -m pip install -q gdown
           python - <<'PY'
+          import gdown
           from pathlib import Path
-          root=Path("src/shalini-rathod-website")
-          for f in ["courses-data.js","lms.js","lms-learn.html","README.md"]:
-              s=(root/f).read_text()
-              print("\n\n======== FILE",f,"========")
-              if f=="courses-data.js":
-                  print(s[:24000])
-              elif f=="lms.js":
-                  print(s[:24000])
-              elif f=="lms-learn.html":
-                  print(s[:13000])
-              else:
-                  print(s[:4000])
+          for label,fid,ext in [
+            ("worksheet","1oE57fWTVJvsqGAvXEJ1obDNweq7V4T_P","pdf"),
+            ("video","1xBfZYGdYWfoytZ1e7UqKtHXpKzj7c7az","mp4")
+          ]:
+            try:
+              dest=Path(f"sample-{label}.{ext}")
+              r=gdown.download(id=fid,output=str(dest),quiet=True)
+              ok=dest.exists() and dest.stat().st_size>100000
+              print(label,"download",ok,"bytes",dest.stat().st_size if dest.exists() else 0,"result",r)
+              if ok: print(label,"header",dest.read_bytes()[:14])
+            except Exception as e: print(label,"ERROR",str(e)[:400])
           PY
