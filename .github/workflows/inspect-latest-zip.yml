@@ -1,0 +1,30 @@
+name: Inspect Latest Shalini ZIP
+on:
+  push:
+    branches:
+      - speakathon-self-hosted-course-20261013
+jobs:
+  inspect-source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch latest source ZIP
+        run: |
+          set -euxo pipefail
+          curl -fL --max-time 120 --retry 2 -o latest.zip "https://at.adobe.com/RudnTowCZMZuUBr7"
+          file latest.zip
+          du -h latest.zip
+          unzip -t latest.zip | tail -5
+      - name: Show project and course layout
+        run: |
+          unzip -l latest.zip | head -55
+          mkdir -p extracted
+          cd extracted
+          unzip -oq ../latest.zip
+          echo "CHALLENGE REFERENCES"
+          grep -Rin -m 5 -E 'speakathon|drive.google.com|challenge 1' --include='*.js' --include='*.html' . | cut -c1-210 | head -45 || :
+      - uses: actions/upload-artifact@v4
+        with:
+          name: inspected-source
+          path: latest.zip
+          retention-days: 2
