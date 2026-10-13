@@ -1,0 +1,31 @@
+name: Smoke Test Speakathon UI
+on:
+  push:
+    branches:
+      - speakathon-self-hosted-course-20261013
+jobs:
+  browser-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare latest learning page and media
+        run: |
+          set -euo pipefail
+          curl -fLsS --retry 2 -o site.zip "https://at.adobe.com/RudnTowCZMZuUBr7"
+          mkdir -p output
+          unzip -oq site.zip -d output
+          python scripts/build_self_hosted_lms.py output/shalini-rathod-website
+          python scripts/fix_speakathon_video.py output/shalini-rathod-website
+          python scripts/rebuild_study_ui.py output/shalini-rathod-website
+          curl -fLsS --retry 2 -o output/shalini-rathod-website/assets/lms/videos/day-01.mp4 "https://at.adobe.com/A1WQFRVTHDCZCRLI"
+          curl -fLsS --retry 2 -o output/shalini-rathod-website/assets/lms/pdfs/day-01.pdf "https://at.adobe.com/VtDmDVxo0071o4vj"
+          node --check output/shalini-rathod-website/academy-learn.js
+      - name: Install headless browser
+        run: |
+          npm install --no-save playwright
+          npx playwright install chromium
+      - name: Test desktop and mobile lesson flows
+        run: |
+          python -m http.server 8877 --bind 127.0.0.1 --directory output/shalini-rathod-website >/tmp/shalini-web.log 2>&1 &
+          sleep 2
+          node scripts/test_study_ui.mjs
