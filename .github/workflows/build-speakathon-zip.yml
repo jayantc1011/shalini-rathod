@@ -63,7 +63,7 @@ jobs:
           node --check output/shalini-rathod-website/courses-data.js
           node --check output/shalini-rathod-website/lms-player.js
           grep -q 'sr-video-portrait' output/shalini-rathod-website/style.css
-          grep -q 'video.videoHeight>video.videoWidth' output/shalini-rathod-website/lms-player.js
+          grep -q 'aspect-ratio:9/16' output/shalini-rathod-website/style.css
           node --check output/shalini-rathod-website/lms.js
           python - <<'PY'
           import json
