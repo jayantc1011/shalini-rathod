@@ -223,7 +223,7 @@ css=r'''/* =====================================================================
   overscroll-behavior:contain;
   scrollbar-width:thin;
   scrollbar-color:#b7c8af transparent;
-  scroll-behavior:smooth;
+  scroll-behavior:auto;
 }
 .fresh-learn .learn-outline-list::-webkit-scrollbar{
   width:6px;
